@@ -1,9 +1,7 @@
 # KIND Cluster Setup Guide
 
-## 1. Installing KIND and kubectl
-Install KIND and kubectl using the provided [script](https://github.com/LondheShubham153/kubestarter/blob/main/kind-cluster/install.sh):
 
-## 2. Setting Up the KIND Cluster
+## 1. Setting Up the KIND Cluster
 Create a kind-config.yaml file:
 
 ```yaml
@@ -31,7 +29,7 @@ Verify the cluster:
 kubectl get nodes
 kubectl cluster-info
 ```
-## 3. Accessing the Cluster
+## 2. Accessing the Cluster
 Use kubectl to interact with the cluster:
 ```bash
 
@@ -39,7 +37,7 @@ kubectl cluster-info
 ```
 
 
-## 4. Setting Up the Kubernetes Dashboard
+## 3. Setting Up the Kubernetes Dashboard
 Deploy the Dashboard
 Apply the Kubernetes Dashboard manifest:
 ```bash
@@ -100,14 +98,14 @@ http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kube
 ```
 Use the token from the previous step to log in.
 
-## 5. Deleting the Cluster
+## 4. Deleting the Cluster
 Delete the KIND cluster:
 ```bash
 
 kind delete cluster --name my-kind-cluster
 ```
 
-## 6. Notes
+## 5. Notes
 
 Multiple Clusters: KIND supports multiple clusters. Use unique --name for each cluster.
 Custom Node Images: Specify Kubernetes versions by updating the image in the configuration file.
