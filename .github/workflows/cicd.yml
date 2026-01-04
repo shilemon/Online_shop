@@ -59,14 +59,14 @@ jobs:
     # ----------------------------
     - name: Create Namespace
       run: |
-        kubectl apply -f blue-green-ns.yml
+        kubectl apply -f K8s/blue-green-ns.yml
 
     # ----------------------------
     # 7️⃣ Deploy GREEN Environment
     # ----------------------------
     - name: Deploy Green Version
       run: |
-        kubectl apply -f green-deployment.yml
+        kubectl apply -f K8s/green-deployment.yml
 
     # ----------------------------
     # 8️⃣ Verify GREEN Deployment
