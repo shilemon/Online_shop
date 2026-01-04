@@ -167,11 +167,11 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
     kubectl apply -f blue-green-ns.yml
     ```
 
-- Apply the both deployment manifests (`online-shop-without-footer-blue-deployment.yaml` and `online-shop-green-deployment.yaml`) present in the current directory.
+- Apply the both deployment manifests (`blue-deployment.yaml` and `green-deployment.yaml`) present in the current directory.
 
     ```bash
-    kubectl apply -f online-shop-without-footer-blue-deployment.yaml
-    kubectl apply -f online-shop-green-deployment.yaml
+    kubectl apply -f blue-deployment.yaml
+    kubectl apply -f green-deployment.yaml
     ```
 
 - Open a new tab of terminal and run the watch command to monitor the deployment
@@ -185,19 +185,19 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 - Run this command to get all resources created in `blue-green-ns` namespace.
 
     ```bash
-    kubectl get all -n blue-green-ns
+    kubectl get all -n online-shop
     ```
 
 - Forward the `online-shop-blue-deployment-service` svc Port with Nodeport
 
     ```bash
-    kubectl port-forward --address 0.0.0.0 svc/online-shop-blue-deployment-service 30001:3001 -n blue-green-ns &
+    kubectl port-forward --address 0.0.0.0 svc/online-shop-blue-deployment-service 32000:3001 -n online-shop &
     ```
 
 - Open the inbound rule for port 30001 in that EC2 Instance and check the application(without footer online shop) at URL:
 
     ```bash
-    http://<Your_Instance_Public_Ip>:30001
+    http://<Your_Instance_Public_Ip>:32000
     ```
 
 - Without footer online shop app image:
@@ -207,10 +207,10 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
-- Forward the `online-shop-green-deployment-service` svc Port with Nodeport
+- Forward the `green-deployment-service` svc Port with Nodeport
 
     ```bash
-    kubectl port-forward --address 0.0.0.0 svc/online-shop-green-deployment-service 30000:3000 -n blue-green-ns &
+    kubectl port-forward --address 0.0.0.0 svc/online-shop-green-deployment-service 31000:3000 -n online-shop &
     ```
 
 - Open the inbound rule for port 30000 in that EC2 Instance and check the application(With footer online shop) at URL:
@@ -231,22 +231,24 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
-- Now, go to the `online-shop-without-footer-blue-deployment.yml` manifest file and edit the service's selector field with **`online-shop-green`** selector.
+- Now, go to the `blue-deployment.yml` manifest file and edit the service's selector field with **`online-shop-green`** selector.
 
 - Previous selector:
 
-    ![image](https://github.com/user-attachments/assets/992edefa-42e8-4a5a-bf9a-8ad15976429d)
+    <img width="1919" height="885" alt="image" src="https://github.com/user-attachments/assets/7b3f90f1-783b-40aa-9470-c7c828ef3a30" />
+
 
 
 - Current selector:
 
-    ![image](https://github.com/user-attachments/assets/39bb2eda-9125-47eb-8293-5e840171a543)
+    <img width="1919" height="854" alt="image" src="https://github.com/user-attachments/assets/e1aced78-68af-4f1d-8626-c4ed0d05cefc" />
 
 
-- Apply `online-shop-without-footer-blue-deployment.yaml`
+
+- Apply `blue-deployment.yaml`
 
     ```bash
-    kubectl apply -f online-shop-without-footer-blue-deployment.yaml
+    kubectl apply -f blue-deployment.yaml
     ```
 - Kill all the port-forwarding using the command:
     
@@ -257,16 +259,16 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 - Now again, forward the `online-shop-blue-deployment-service` svc Port with Nodeport
 
     ```bash
-    kubectl port-forward --address 0.0.0.0 svc/online-shop-blue-deployment-service 30001:3001 -n blue-green-ns &
+    kubectl port-forward --address 0.0.0.0 svc/online-shop-blue-deployment-service 32000:3001 -n online-shop &
     ```
 
 - Check now, the application has added a new feature as `with footer online shop`, as it previously did not have a footer, but it is now added as a feature, check at URL:
 
     ```bash
-    http://<Your_Instance_Public_Ip>:30001
+    http://<Your_Instance_Public_Ip>:32000
     ```
 
-- Reload the webpage, you will see `with footer online web page` this time at NodePort: 30001. This means you have successfully switched traffic from a blue environment to a green environment.
+- Reload the webpage, you will see `with footer online web page` this time at NodePort: 32000. This means you have successfully switched traffic from a blue environment to a green environment.
 
     ![image](https://github.com/user-attachments/assets/7c400f73-adbe-4bc6-b54b-a87035611c2c)
 
