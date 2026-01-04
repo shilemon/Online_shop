@@ -176,7 +176,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 - Open a new tab of terminal and run the watch command to monitor the deployment
 
     ```bash
-    watch kubectl get pods -n blue-green-ns
+    watch kubectl get pods -n online-shop
     ```
 
 - It will deploy `online shop web page without footer` (Blue environment) and `online shop web page with footer` as a new feature (Green environment), now try to access the blue environment web page on browser.
