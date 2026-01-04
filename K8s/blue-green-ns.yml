@@ -1,0 +1,4 @@
+Kind: Namespace
+apiversion: v1
+metadata:
+  name: online-shop
