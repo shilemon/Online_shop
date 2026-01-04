@@ -1,13 +1,12 @@
-apiversion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app: online-shop-blue
   name: online-shop-blue
   namespace: online-shop
-
 spec:
-  replicas: 4 
+  replicas: 4
   selector:
     matchLabels:
       app: online-shop-blue
@@ -17,28 +16,29 @@ spec:
         app: online-shop-blue
     spec:
       containers:
-        - image: online-shop:latest
-          name: online-shop-blue
-          resources:
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-            requests:
-              memory: "256Mi"
-              cpu: "250m"
-
+      - image: emon110852/online_shop_without_footer:latest
+        name: online-shop-blue
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
 ---
-apiversion: v1
+apiVersion: v1
 kind: Service
 metadata:
-  name: online-shop-blue-service
+  name: online-shop-blue-deployment-service
   namespace: online-shop
 spec:
-  selector: 
-    app: online-shop-blue  
+  selector:
+    app: online-shop-green
   type: NodePort
   ports:
     - protocol: TCP
-      port: 3000
+      port: 3001
       targetPort: 3000
-      NodePort: 30001
+      nodePort: 32000
+      
+      
