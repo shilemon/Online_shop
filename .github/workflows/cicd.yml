@@ -7,103 +7,86 @@ on:
 
 env:
   NAMESPACE: online-shop
+  BLUE_IMAGE: emon110852/online_shop_without_footer
   GREEN_IMAGE: emon110852/online-shop
-  CLUSTER_NAME: online-shop-cluster
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
+    # ----------------------------
+    # 1️⃣ Checkout Source Code
+    # ----------------------------
     - name: Checkout repository
       uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
+
+    # ----------------------------
+    # 2️⃣ Docker Login
+    # ----------------------------
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    # Build image locally FIRST (don't push yet)
-    - name: Build Docker Image
-      uses: docker/build-push-action@v5
+
+    # ----------------------------
+    # 3️⃣ Build & Push GREEN Image
+    # ----------------------------
+    - name: Build and Push Green Image
+      run: |
+        docker build -t $GREEN_IMAGE:latest .
+        docker push $GREEN_IMAGE:latest
+
+    # ----------------------------
+    # 4️⃣ Install kubectl
+    # ----------------------------
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v4
       with:
-        context: .
-        push: false
-        load: true
-        tags: ${{ env.GREEN_IMAGE }}:latest
-    
-    # Create Kind cluster
-    - name: Create Kind Cluster
-      uses: helm/kind-action@v1.10.0
-      with:
-        cluster_name: ${{ env.CLUSTER_NAME }}
-        config: kind-cluster/kind-config.yml
-        wait: 180s
-    
-    # Verify cluster is ready
-    - name: Verify Cluster
+        version: v1.29.0
+
+    # ----------------------------
+    # 5️⃣ Configure Kubernetes Access
+    # ----------------------------
+    - name: Configure kubeconfig
       run: |
-        kubectl cluster-info
-        kubectl get nodes
-        kubectl version
-    
-    # Wait for nodes to be ready
-    - name: Wait for Nodes
-      run: |
-        kubectl wait --for=condition=ready nodes --all --timeout=300s
-    
-    # Load the image into Kind
-    - name: Load Image into Kind
-      run: |
-        echo "Loading image into Kind cluster..."
-        kind load docker-image ${{ env.GREEN_IMAGE }}:latest --name ${{ env.CLUSTER_NAME }}
-        echo "Image loaded successfully!"
-    
-    # Verify image is loaded
-    - name: Verify Image in Kind
-      run: |
-        docker exec ${{ env.CLUSTER_NAME }}-control-plane crictl images | grep online-shop || echo "Image not found"
-    
-    # Now push to Docker Hub for future use
-    - name: Push Image to Docker Hub
-      run: |
-        docker push ${{ env.GREEN_IMAGE }}:latest
-    
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=$PWD/kubeconfig
+
+    # ----------------------------
+    # 6️⃣ Create Namespace
+    # ----------------------------
     - name: Create Namespace
       run: |
-        kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-    
+        kubectl apply -f K8s/blue-green-ns.yml
+
+    # ----------------------------
+    # 7️⃣ Deploy GREEN Environment
+    # ----------------------------
     - name: Deploy Green Version
       run: |
         kubectl apply -f K8s/green-deployment.yml
-    
+
+    # ----------------------------
+    # 8️⃣ Verify GREEN Deployment
+    # ----------------------------
     - name: Wait for Green Pods
       run: |
-        kubectl rollout status deployment/online-shop-green -n ${{ env.NAMESPACE }} --timeout=5m
-    
-    - name: Get Pod Status
+        kubectl rollout status deployment/online-shop-green -n $NAMESPACE
+
+    # ----------------------------
+    # 9️⃣ Switch Traffic to GREEN
+    # ----------------------------
+    - name: Switch Service to Green
       run: |
-        kubectl get pods -n ${{ env.NAMESPACE }} -o wide
-    
-    - name: Display Logs (if failed)
-      if: failure()
+        kubectl patch service online-shop-blue-deployment-service \
+        -n $NAMESPACE \
+        -p '{"spec":{"selector":{"app":"online-shop-green"}}}'
+
+    # ----------------------------
+    # 🔟 Cleanup BLUE Deployment
+    # ----------------------------
+    - name: Remove Blue Deployment
       run: |
-        echo "=== Pod Descriptions ==="
-        kubectl describe pods -n ${{ env.NAMESPACE }}
-        echo "=== Pod Logs ==="
-        kubectl logs -n ${{ env.NAMESPACE }} -l app=online-shop-green --tail=50 || true
-    
-    - name: Display Status
-      run: |
-        echo "=== Deployments ==="
-        kubectl get deployments -n ${{ env.NAMESPACE }}
-        echo ""
-        echo "=== Pods ==="
-        kubectl get pods -n ${{ env.NAMESPACE }}
-        echo ""
-        echo "=== Services ==="
-        kubectl get services -n ${{ env.NAMESPACE }}
+        kubectl delete deployment online-shop-blue -n $NAMESPACE || true
