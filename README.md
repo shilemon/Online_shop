@@ -202,7 +202,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 - Without footer online shop app image:
 
-    ![image](https://github.com/user-attachments/assets/d68fda9e-2e18-4086-b64b-a372c3b6dd01)
+    <img width="1914" height="992" alt="Screenshot 2026-01-04 233100" src="https://github.com/user-attachments/assets/3dc43bf2-a63f-41c5-8510-d4587dcb4507" />
+
 
 ---
 
@@ -220,7 +221,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 - With the footer online shop image:
     
-    ![image](https://github.com/user-attachments/assets/03409f86-c206-4255-b04b-3d8c9d3741a9)
+    <img width="1919" height="991" alt="Screenshot 2026-01-04 233132" src="https://github.com/user-attachments/assets/188ba502-d8f0-4185-98ab-104d9b9e1393" />
+
 
 
 >   [!Note]
@@ -229,7 +231,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
-- Now, go to the `online-shop-without-footer-blue-deployment.yaml` manifest file and edit the service's selector field with **`online-shop-green`** selector.
+- Now, go to the `online-shop-without-footer-blue-deployment.yml` manifest file and edit the service's selector field with **`online-shop-green`** selector.
 
 - Previous selector:
 
