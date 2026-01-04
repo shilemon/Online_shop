@@ -40,7 +40,10 @@ A modern, responsive e-commerce platform built with React, featuring a sophistic
 
 1. Clone the repository:
 ```bash
-ycd online-shop
+   git clone https://github.com/shilemon/Online_shop.git
+```
+```bash
+cd online-shop
 ```
 
 2. Install dependencies:
