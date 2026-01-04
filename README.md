@@ -40,8 +40,7 @@ A modern, responsive e-commerce platform built with React, featuring a sophistic
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/iemafzalhassan/online-shop.git
-cd online-shop
+ycd online-shop
 ```
 
 2. Install dependencies:
