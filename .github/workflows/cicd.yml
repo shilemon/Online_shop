@@ -7,93 +7,45 @@ on:
 
 env:
   NAMESPACE: online-shop
-  BLUE_IMAGE: emon110852/online_shop_without_footer
-  GREEN_IMAGE: emon110852/online-shop
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-    # ----------------------------------
-    # 1️⃣ Checkout Repository
-    # ----------------------------------
-    - name: Checkout source code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    # ----------------------------------
-    # 2️⃣ Docker Hub Login
-    # ----------------------------------
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # ----------------------------------
-    # 3️⃣ Build & Push GREEN Image
-    # ----------------------------------
-    - name: Build and Push Green Image
+    - name: Build & Push Green Image
       run: |
-        docker build -t $GREEN_IMAGE:latest .
-        docker push $GREEN_IMAGE:latest
+        docker build -t emon110852/online-shop:latest .
+        docker push emon110852/online-shop:latest
 
-    # ----------------------------------
-    # 4️⃣ Install kubectl
-    # ----------------------------------
-    - name: Install kubectl
-      uses: azure/setup-kubectl@v4
-      with:
-        version: v1.29.0
-
-    # ----------------------------------
-    # 5️⃣ Configure Kubernetes Access
-    # ----------------------------------
-    - name: Configure kubeconfig
+    - name: Verify Cluster
       run: |
-        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
-        export KUBECONFIG=$PWD/kubeconfig
+        kubectl cluster-info
+        kubectl get nodes
 
-    # ----------------------------------
-    # 6️⃣ Verify Repo Structure (Debug)
-    # ----------------------------------
-    - name: Verify K8s files
-      run: |
-        ls -R
-
-    # ----------------------------------
-    # 7️⃣ Create Namespace
-    # ----------------------------------
     - name: Create Namespace
       run: |
         kubectl get ns $NAMESPACE || kubectl apply -f K8s/blue-green-ns.yml
 
-    # ----------------------------------
-    # 8️⃣ Deploy GREEN Environment
-    # ----------------------------------
-    - name: Deploy Green Application
+    - name: Deploy Green
       run: |
         kubectl apply -f K8s/green-deployment.yml
 
-    # ----------------------------------
-    # 9️⃣ Wait for GREEN Pods
-    # ----------------------------------
     - name: Wait for Green Pods
       run: |
         kubectl rollout status deployment/online-shop-green -n $NAMESPACE
 
-    # ----------------------------------
-    # 🔟 Switch Traffic to GREEN
-    # ----------------------------------
-    - name: Switch Service to Green
+    - name: Switch Traffic to Green
       run: |
-        kubectl patch service online-shop-blue-deployment-service \
+        kubectl patch svc online-shop-blue-deployment-service \
         -n $NAMESPACE \
         -p '{"spec":{"selector":{"app":"online-shop-green"}}}'
-
-    # ----------------------------------
-    # 1️⃣1️⃣ Remove BLUE Deployment
-    # ----------------------------------
-    - name: Remove Blue Deployment
-      run: |
-        kubectl delete deployment online-shop-blue -n $NAMESPACE || true
