@@ -1,4 +1,4 @@
-name: Online Shop CI/CD - Blue Green Deployment
+name: Online Shop CI/CD – Blue Green Deployment
 
 on:
   push:
@@ -11,83 +11,89 @@ env:
   GREEN_IMAGE: emon110852/online-shop
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # ----------------------------
-    # 1️⃣ Checkout Source Code
-    # ----------------------------
-    - name: Checkout repository
+    # ----------------------------------
+    # 1️⃣ Checkout Repository
+    # ----------------------------------
+    - name: Checkout source code
       uses: actions/checkout@v4
 
-    # ----------------------------
-    # 2️⃣ Docker Login
-    # ----------------------------
+    # ----------------------------------
+    # 2️⃣ Docker Hub Login
+    # ----------------------------------
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # ----------------------------
+    # ----------------------------------
     # 3️⃣ Build & Push GREEN Image
-    # ----------------------------
+    # ----------------------------------
     - name: Build and Push Green Image
       run: |
         docker build -t $GREEN_IMAGE:latest .
         docker push $GREEN_IMAGE:latest
 
-    # ----------------------------
+    # ----------------------------------
     # 4️⃣ Install kubectl
-    # ----------------------------
-    - name: Setup kubectl
+    # ----------------------------------
+    - name: Install kubectl
       uses: azure/setup-kubectl@v4
       with:
         version: v1.29.0
 
-    # ----------------------------
+    # ----------------------------------
     # 5️⃣ Configure Kubernetes Access
-    # ----------------------------
+    # ----------------------------------
     - name: Configure kubeconfig
       run: |
         echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
         export KUBECONFIG=$PWD/kubeconfig
 
-    # ----------------------------
-    # 6️⃣ Create Namespace
-    # ----------------------------
+    # ----------------------------------
+    # 6️⃣ Verify Repo Structure (Debug)
+    # ----------------------------------
+    - name: Verify K8s files
+      run: |
+        ls -R
+
+    # ----------------------------------
+    # 7️⃣ Create Namespace
+    # ----------------------------------
     - name: Create Namespace
       run: |
-        kubectl get ns online-shop || kubectl apply -f K8s/blue-green-ns.yml
+        kubectl get ns $NAMESPACE || kubectl apply -f K8s/blue-green-ns.yml
 
-
-    # ----------------------------
-    # 7️⃣ Deploy GREEN Environment
-    # ----------------------------
-    - name: Deploy Green Version
+    # ----------------------------------
+    # 8️⃣ Deploy GREEN Environment
+    # ----------------------------------
+    - name: Deploy Green Application
       run: |
         kubectl apply -f K8s/green-deployment.yml
 
-    # ----------------------------
-    # 8️⃣ Verify GREEN Deployment
-    # ----------------------------
+    # ----------------------------------
+    # 9️⃣ Wait for GREEN Pods
+    # ----------------------------------
     - name: Wait for Green Pods
       run: |
         kubectl rollout status deployment/online-shop-green -n $NAMESPACE
 
-    # ----------------------------
-    # 9️⃣ Switch Traffic to GREEN
-    # ----------------------------
+    # ----------------------------------
+    # 🔟 Switch Traffic to GREEN
+    # ----------------------------------
     - name: Switch Service to Green
       run: |
         kubectl patch service online-shop-blue-deployment-service \
         -n $NAMESPACE \
         -p '{"spec":{"selector":{"app":"online-shop-green"}}}'
 
-    # ----------------------------
-    # 🔟 Cleanup BLUE Deployment
-    # ----------------------------
+    # ----------------------------------
+    # 1️⃣1️⃣ Remove BLUE Deployment
+    # ----------------------------------
     - name: Remove Blue Deployment
       run: |
         kubectl delete deployment online-shop-blue -n $NAMESPACE || true
